@@ -11,6 +11,6 @@ public:
     TokenType type;
     std::string value;
   };
-  Lexer(std::string &input) : input(input) {}
+  Lexer(const std::string &input) : input(input) {}
   std::vector<Token> tokenize();
 };
