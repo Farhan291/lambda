@@ -18,6 +18,12 @@ struct node {
 };
 
 struct variable : node {
+  int index = -1; // free var
+  std::string name;
+  std::string repr() override { return name; }
+};
+
+struct namedref : node {
   std::string name;
   std::string repr() override { return name; }
 };

@@ -18,6 +18,17 @@ Lexer::Token Parser::expect(Lexer::TokenType t, const std::string &msg) {
   return advance();
 }
 
+void Parser::pushVar(const std::string &name) { context.push_back(name); }
+void Parser::popVar() { context.pop_back(); }
+
+int Parser::resolve(const std::string &name) {
+  for (int i = (int)context.size() - 1; i >= 0; i--) {
+    if (context[i] == name)
+      return (int)context.size() - i - 1;
+  }
+  return -1; // free var
+}
+
 // program := statement*
 program Parser::parseProgram() {
   program result;
@@ -60,8 +71,10 @@ std::unique_ptr<node> Parser::parseExpression() {
 std::unique_ptr<node> Parser::parseAbstraction() {
   expect(Lexer::Lambda, "\\");
   std::string param = expect(Lexer::Identifier, "Identifier").value;
+  pushVar(param);
   expect(Lexer::Dot, ".");
   std::unique_ptr<node> body = parseExpression();
+  popVar();
   auto ab = std::make_unique<abstraction>();
   ab->param = param;
   ab->body = std::move(body);
@@ -82,6 +95,13 @@ std::unique_ptr<node> Parser::parseAtom() {
   if (check(Lexer::Identifier)) {
     auto atom = std::make_unique<variable>();
     atom->name = advance().value;
+    int idx = resolve(atom->name);
+    if (idx == -1) {
+      auto ref = std::make_unique<namedref>();
+      ref->name = atom->name;
+      return ref;
+    }
+    atom->index = idx;
     return atom;
   } else if (check(Lexer::OpenParen)) {
     advance();
