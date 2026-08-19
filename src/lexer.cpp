@@ -3,7 +3,7 @@
 std::vector<Lexer::Token> Lexer::tokenize() {
   std::vector<Token> tokens;
 
-  for (int i = 0; i < input.size(); i++) {
+  for (int i = 0; i < (int)input.size(); i++) {
     switch (input[i]) {
     case '\\':
       tokens.push_back({Lambda, "\\"});
@@ -20,10 +20,18 @@ std::vector<Lexer::Token> Lexer::tokenize() {
     case ')':
       tokens.push_back({CloseParen, ")"});
       break;
+    case ';':
+      tokens.push_back({Semicolon, ";"});
+      break;
+    case ' ':
+    case '\t':
+    case '\n':
+    case '\r':
+      break;
     default:
       if (isalpha(input[i])) {
         std::string name = "";
-        while (i < input.size() && isalpha(input[i])) {
+        while (i < (int)input.size() && isalpha(input[i])) {
           name += input[i];
           i++;
         }

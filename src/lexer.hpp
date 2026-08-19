@@ -6,7 +6,15 @@ class Lexer {
   std::string input;
 
 public:
-  enum TokenType { Lambda, Dot, Identifier, OpenParen, CloseParen, Assign };
+  enum TokenType {
+    Lambda,
+    Dot,
+    Identifier,
+    OpenParen,
+    CloseParen,
+    Assign,
+    Semicolon
+  };
   struct Token {
     TokenType type;
     std::string value;
