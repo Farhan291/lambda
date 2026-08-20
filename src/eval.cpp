@@ -1,4 +1,6 @@
 #include "eval.hpp"
+#include "lexer.hpp"
+#include "parser.hpp"
 #include <iostream>
 #include <stdexcept>
 
@@ -134,6 +136,22 @@ void Eval::run() {
     if (auto *as = dynamic_cast<assignment *>(stmt.get())) {
       auto result = eval(as->rvalue.get(), defs);
       // std::cout << as->lvalue << " = " << result->repr() << "\n";
+      defs[as->lvalue] = std::move(result);
+    } else {
+      auto result = normalize(stmt.get(), defs);
+      std::cout << result->repr() << "\n";
+    }
+  }
+}
+
+void Eval::runLine(const std::string &line) {
+  Lexer lex(line);
+  auto tokens = lex.tokenize();
+  Parser p(tokens);
+  auto prog = p.parseProgram();
+  for (auto &stmt : prog) {
+    if (auto *as = dynamic_cast<assignment *>(stmt.get())) {
+      auto result = eval(as->rvalue.get(), defs);
       defs[as->lvalue] = std::move(result);
     } else {
       auto result = normalize(stmt.get(), defs);

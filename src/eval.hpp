@@ -18,6 +18,8 @@ class Eval {
   normalize(node *n, std::map<std::string, std::unique_ptr<node>> &defs);
 
 public:
+  Eval() = default;
   Eval(std::vector<std::unique_ptr<node>> p) : program(std::move(p)) {};
   void run();
+  void runLine(const std::string &line);
 };
