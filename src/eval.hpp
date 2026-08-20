@@ -14,7 +14,10 @@ class Eval {
   std::unique_ptr<node>
   eval(node *n, std::map<std::string, std::unique_ptr<node>> &defs);
 
+  std::unique_ptr<node>
+  normalize(node *n, std::map<std::string, std::unique_ptr<node>> &defs);
+
 public:
-  Eval(std::vector<std::unique_ptr<node>> &p) : program(std::move(p)) {};
+  Eval(std::vector<std::unique_ptr<node>> p) : program(std::move(p)) {};
   void run();
 };

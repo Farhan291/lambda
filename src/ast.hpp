@@ -33,7 +33,10 @@ struct application : node {
   std::string repr() override {
     std::string ans;
     for (auto &x : atoms) {
-      ans += x->repr() + " ";
+      if (dynamic_cast<application *>(x.get()))
+        ans += "(" + x->repr() + ")";
+      else
+        ans += x->repr() + " ";
     }
     return ans;
   }

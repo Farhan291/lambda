@@ -43,7 +43,7 @@ std::unique_ptr<node> Eval::substitute(node *target, int idx, node *arg) {
   if (auto *v = dynamic_cast<abstraction *>(target)) {
     auto copy = std::make_unique<abstraction>();
     copy->param = v->param;
-    auto shiftedArg = shift(arg, 0, 1);
+    auto shiftedArg = shift(arg, 1, 0);
     copy->body = substitute(v->body.get(), idx + 1, shiftedArg.get());
     return copy;
   }
@@ -72,6 +72,9 @@ std::unique_ptr<node>
 Eval::eval(node *n, std::map<std::string, std::unique_ptr<node>> &defs) {
   std::unique_ptr<node> current;
   while (true) {
+    if (dynamic_cast<variable *>(n)) {
+      return current ? std::move(current) : shift(n, 0, 0);
+    }
     if (auto *v = dynamic_cast<namedref *>(n)) {
       auto it = defs.find(v->name);
       if (it == defs.end())
@@ -106,6 +109,26 @@ Eval::eval(node *n, std::map<std::string, std::unique_ptr<node>> &defs) {
   }
 }
 
+std::unique_ptr<node>
+Eval::normalize(node *n, std::map<std::string, std::unique_ptr<node>> &defs) {
+  auto reduced = eval(n, defs);
+
+  if (auto *abs = dynamic_cast<abstraction *>(reduced.get())) {
+    auto copy = std::make_unique<abstraction>();
+    copy->param = abs->param;
+    copy->body = normalize(abs->body.get(), defs);
+    return copy;
+  }
+  if (auto *app = dynamic_cast<application *>(reduced.get())) {
+    auto copy = std::make_unique<application>();
+    for (auto &atom : app->atoms) {
+      copy->atoms.push_back(normalize(atom.get(), defs));
+    }
+    return copy;
+  }
+  return reduced; // variable, named_ref, or anything else — nothing more to do
+}
+
 void Eval::run() {
   for (auto &stmt : program) {
     if (auto *as = dynamic_cast<assignment *>(stmt.get())) {
@@ -113,7 +136,7 @@ void Eval::run() {
       // std::cout << as->lvalue << " = " << result->repr() << "\n";
       defs[as->lvalue] = std::move(result);
     } else {
-      auto result = eval(stmt.get(), defs);
+      auto result = normalize(stmt.get(), defs);
       std::cout << result->repr() << "\n";
     }
   }
